@@ -1,4 +1,4 @@
-# eth filter
+# ETH Transaction Filter
 
 ### Project Tools
 
