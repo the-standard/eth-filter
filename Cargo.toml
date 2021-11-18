@@ -10,3 +10,6 @@ edition = "2018"
 rand = "0.8.3"
 web3 = { git = "https://github.com/tomusdrw/rust-web3" }
 tokio = { version = "1.13.0", features = ["full"] }
+lazy_static = "1.4"
+diesel = { version = "1.4.4", features = ["postgres"] }
+dotenv = "0.15.0"
