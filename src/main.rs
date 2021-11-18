@@ -25,22 +25,12 @@ lazy_static! {
     };
 }
 
-// fn xx() {
-//     use eth_filter::schema::full_trans::dsl::*;
-
-//     let connection = establish_connection();
-//     // let results = full_trans.filter(published.eq(true))
-//     let results = full_trans
-//         .limit(5)
-//         .load::<FullTrans>(&connection)
-//         .expect("Error loading trans");
-
-//     println!("Displaying {} trans", results.len());
-//     for tx in results {
-//         println!("{}", tx.id);
-//         println!("----------\n");
-//     }
-// }
+async fn get_last_block() -> i32 {
+    // TODO not the last block
+    let last_block = option_env!("LATEST_BLOCK");
+    let last_block = last_block.unwrap_or("966591");
+    return last_block.parse::<i32>().unwrap();
+}
 
 async fn get_latest_block() -> U64 {
     return match WEB3.eth().block_number().await {
@@ -53,7 +43,17 @@ async fn get_latest_block() -> U64 {
 
 async fn process() {
     let latest_block = get_latest_block().await;
+    let latest_block = latest_block.low_u64();
+    let latest_block = latest_block as i32;
+
     println!("Latest Block Number: {:?}", latest_block);
+
+    let last_block = get_last_block().await;
+   
+    println!("{}, {}", last_block, latest_block);
+    for n in last_block..latest_block {
+        println!("{}", n);
+    }
 }
 
 async fn run() {
