@@ -2,12 +2,15 @@ extern crate web3;
 extern crate diesel;
 extern crate eth_filter;
 extern crate redis;
+extern crate dotenv;
 
 use web3::futures::Future;
 use web3::types::{TransactionRequest, U256, U64, H256, SyncState};
 use std::{thread, time};
 
 use self::eth_filter::*;
+use std::env;
+use dotenv::dotenv;
 // use self::models::*;
 // use self::diesel::prelude::*;
 use tokio::time::{sleep, Duration};
@@ -46,7 +49,6 @@ async fn set_block(n: i32) {
 async fn get_block(block: i32) -> web3::types::Block<H256> {
     let block = block as u64;
     let res = w3::WEB3.eth().block(U64([block]).into()).await;
-    // return res;
 
     match res {
         Ok(_x) => {
@@ -58,20 +60,49 @@ async fn get_block(block: i32) -> web3::types::Block<H256> {
     }
 }
 
+fn fetch_addresses() -> Vec<String> {
+    dotenv().ok();
+    let name = "ETH_ADDRESSES";
+    let _addresses = match env::var(name) {
+        Ok(v) => v,
+        Err(e) => panic!("${} is not set ({})", name, e)
+    };
+
+    _addresses.split(",").map(|s| s.to_string()).collect()
+}
+
+async fn check(txid: H256, block: i32, addresses: Vec<String>) {
+    println!("Checking TXID: {:?}", txid);
+}
+
 async fn process() {
     let latest_block = get_latest_block().await;
     let latest_block = latest_block.low_u64();
     let latest_block = latest_block as i32;
 
     println!("Latest Block Number: {:?}", latest_block);
-
     let last_block = get_last_block().await;
 
     println!("{}, {}", last_block, latest_block);
-    for n in last_block..latest_block {
-        set_block(n).await;
-        let data = get_block(n).await;
-        println!("xxxxxxxx {:?}", data);
+
+    // the addresses we want to monitor
+    let addresses = fetch_addresses();
+    println!("Monitoring {:?}", addresses);
+
+    return;
+
+    for block in last_block..latest_block {
+        set_block(block).await;
+        let data = get_block(block).await;
+        // match data.hash {
+        //     Some(val_removed) => {
+        //         println!("xxxxxxxx {:?}", val_removed);
+        //     }
+        //     None => (),
+        // }
+        for txid in data.transactions {
+            check(txid, block, addresses).await;
+        }
     }
 }
 
